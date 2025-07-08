@@ -40,20 +40,135 @@ def get_date_input():
             print("错误：日期格式不正确，请使用 YYYY-MM-DD 格式")
             continue
 
-def read_components(filename):
+def is_valid_component_match(text, component_name):
     """
-    从文本文件中读取组件列表
+    验证文本中是否真正包含目标组件（使用单词边界匹配）
+    参数：
+        text: 要检查的文本
+        component_name: 组件名称
+    返回：
+        bool: 是否为有效匹配
+    """
+    # 转换为小写进行比较
+    text_lower = text.lower()
+    component_lower = component_name.lower()
+    
+    # 使用正则表达式进行单词边界匹配
+    # \b 表示单词边界，确保匹配的是完整单词而不是子字符串
+    pattern = r'\b' + re.escape(component_lower) + r'\b'
+    
+    return bool(re.search(pattern, text_lower))
+
+def get_component_aliases(component_name):
+    """
+    获取组件的常见别名和相关搜索词
+    参数：
+        component_name: 基础组件名称
+    返回：
+        list: 包含原名称和别名的列表
+    """
+    # 定义常见组件的别名映射
+    alias_map = {
+        'poi': ['apache poi', 'poi library'],
+        'log4j': ['apache log4j', 'log4j2'],
+        'spring': ['spring framework', 'springframework'],
+        'struts': ['apache struts', 'struts2'],
+        'jackson': ['jackson-databind', 'fasterxml jackson'],
+        'gson': ['google gson'],
+        'fastjson': ['alibaba fastjson'],
+        'mysql': ['mysql connector', 'mysql-connector'],
+        'redis': ['redis server'],
+        'nginx': ['nginx server'],
+        'apache': ['apache httpd', 'apache server'],
+        'tomcat': ['apache tomcat'],
+        'elasticsearch': ['elastic elasticsearch'],
+        'kibana': ['elastic kibana'],
+        'mongodb': ['mongo database'],
+        'postgresql': ['postgres', 'postgresql database'],
+        'node': ['node.js', 'nodejs'],
+        'react': ['react.js', 'reactjs'],
+        'vue': ['vue.js', 'vuejs'],
+        'angular': ['angular.js', 'angularjs'],
+        'jquery': ['jquery library'],
+        'bootstrap': ['bootstrap framework'],
+        'django': ['django framework'],
+        'flask': ['flask framework'],
+        'express': ['express.js', 'expressjs'],
+        'laravel': ['laravel framework'],
+        'symfony': ['symfony framework'],
+        'wordpress': ['wordpress cms'],
+        'drupal': ['drupal cms'],
+        'joomla': ['joomla cms']
+    }
+    
+    component_lower = component_name.lower()
+    aliases = alias_map.get(component_lower, [])
+    
+    # 始终包含原始名称
+    return [component_name] + aliases
+
+def validate_cve_relevance(cve_data, component_name):
+    """
+    验证CVE数据是否真正与目标组件相关
+    参数：
+        cve_data: CVE数据字典
+        component_name: 目标组件名称
+    返回：
+        bool: 是否相关
+    """
+    # 检查的字段列表
+    fields_to_check = [
+        cve_data.get('description', ''),
+        cve_data.get('id', ''),
+        ' '.join(cve_data.get('references', [])) if cve_data.get('references') else ''
+    ]
+    
+    # 获取组件的所有可能名称（包括别名）
+    all_names = get_component_aliases(component_name)
+    
+    # 检查是否有任何一个名称在任何字段中匹配
+    for field_text in fields_to_check:
+        if field_text:
+            for name in all_names:
+                if is_valid_component_match(field_text, name):
+                    return True
+    
+    return False
+
+def read_components_with_config(filename):
+    """
+    从文本文件中读取组件列表，支持配置格式
+    支持格式：
+    1. 简单格式：每行一个组件名
+    2. 配置格式：组件名:搜索词1,搜索词2
+    
     参数：
         filename: 组件列表文件名
     返回：
-        list: 组件名称列表
+        list: 组件配置列表，每个元素包含{'name': '组件名', 'search_terms': [搜索词列表]}
     """
     try:
         with open(filename, 'r', encoding='utf-8') as f:
-            # 读取所有行并去除空白字符
-            components = [line.strip() for line in f.readlines()]
-            # 过滤掉空行
-            components = [comp for comp in components if comp]
+            lines = [line.strip() for line in f.readlines()]
+            lines = [line for line in lines if line and not line.startswith('#')]  # 过滤空行和注释
+        
+        components = []
+        for line in lines:
+            if ':' in line:
+                # 配置格式：组件名:搜索词1,搜索词2
+                name, search_terms = line.split(':', 1)
+                name = name.strip()
+                search_terms = [term.strip() for term in search_terms.split(',')]
+            else:
+                # 简单格式：只有组件名
+                name = line
+                search_terms = get_component_aliases(name)
+            
+            components.append({
+                'name': name,
+                'search_terms': search_terms
+            })
+        
         return components
     except Exception as e:
         print(f"读取组件文件出错: {e}")
@@ -61,7 +176,7 @@ def read_components(filename):
 
 def fetch_cve_data(component, start_date, end_date):
     """
-    从cvefeed.io获取指定组件的CVE数据
+    从cvefeed.io获取指定组件的CVE数据，使用改进的搜索策略
     参数：
         component: 组件名称
         start_date: 开始日期
@@ -69,10 +184,16 @@ def fetch_cve_data(component, start_date, end_date):
     返回：
         dict: CVE数据字典，包含组件名称和漏洞列表
     """
+    # 获取组件的搜索别名
+    search_terms = get_component_aliases(component)
+    
+    # 优先使用更具体的搜索词（通常别名更准确）
+    primary_search_term = search_terms[1] if len(search_terms) > 1 else search_terms[0]
+    
     # 设置请求URL和参数
     url = "https://cvefeed.io/api/advanced-search"
     params = {
-        "keyword": component,
+        "keyword": primary_search_term,  # 使用更精确的搜索词
         "published_after": start_date,
         "published_before": end_date,
         "last_modified_after": start_date,
@@ -101,6 +222,7 @@ def fetch_cve_data(component, start_date, end_date):
 
     try:
         print(f"\n正在获取组件 {component} 的CVE数据...")
+        print(f"使用搜索词: {primary_search_term}")
         # 发送GET请求
         response = requests.get(url, params=params, headers=headers)
         
@@ -168,7 +290,7 @@ def clean_description(text):
 
 def process_cve_data(json_data):
     """
-    处理CVE数据，提取关键信息
+    处理CVE数据，提取关键信息并进行相关性验证
     参数：
         json_data: 原始JSON数据
     返回：
@@ -180,15 +302,26 @@ def process_cve_data(json_data):
         component = component_data['component']
         cve_entries = []
         
-        for cve in component_data['results']:
-            cve_entry = {
-                'CVE编号': cve['id'],
-                '发布时间': cve['published'].split('T')[0],
-                '漏洞描述': clean_description(cve['description'])
-            }
-            cve_entries.append(cve_entry)
+        print(f"\n正在处理组件 {component} 的漏洞数据...")
+        original_count = len(component_data['results'])
+        filtered_count = 0
         
-        # 只在有漏洞时才添加结果
+        for cve in component_data['results']:
+            # 验证CVE是否真正与目标组件相关
+            if validate_cve_relevance(cve, component):
+                cve_entry = {
+                    'CVE编号': cve['id'],
+                    '发布时间': cve['published'].split('T')[0],
+                    '漏洞描述': clean_description(cve['description'])
+                }
+                cve_entries.append(cve_entry)
+                filtered_count += 1
+            else:
+                print(f"过滤掉不相关的漏洞: {cve['id']}")
+        
+        print(f"组件 {component}: 原始漏洞 {original_count} 个，过滤后 {filtered_count} 个")
+        
+        # 只在有有效漏洞时才添加结果
         if cve_entries:
             result = {
                 '组件名称': component,
@@ -338,13 +471,13 @@ def main():
     print(f"\n已选择日期范围: {start_date} 至 {end_date}")
     
     # 读取组件列表
-    components = read_components('components.txt')
+    components = read_components_with_config('components.txt')
     if not components:
         print("没有找到任何组件名称")
         return
     
     print(f"\n找到 {len(components)} 个组件")
-    print("组件列表:", components)
+    print("组件列表:", [comp['name'] for comp in components])
     
     # 确认是否继续
     confirm = input("\n是否开始抓取数据？(y/n): ")
@@ -357,12 +490,12 @@ def main():
     
     # 依次处理每个组件
     for component in components:
-        result = fetch_cve_data(component, start_date, end_date)
+        result = fetch_cve_data(component['name'], start_date, end_date)
         if result:
             all_results.append(result)
-            print(f"成功获取组件 {component} 的数据")
+            print(f"成功获取组件 {component['name']} 的数据")
         else:
-            print(f"获取组件 {component} 的数据失败")
+            print(f"获取组件 {component['name']} 的数据失败")
     
     if not all_results:
         print("\n没有成功获取任何数据")
