@@ -1,0 +1,77 @@
+以下是针对提供的CVE列表中每条记录的详细分析，以确定其是否真正影响所标注的组件本身：
+
+1. **CVE-2025-43700, Component: spring**
+   - **分析**：此漏洞描述中提到的是Salesforce OmniStudio (FlexCards)，而不是Spring Framework。因此，这是一个术语歧义的问题。漏洞实际影响的是Salesforce OmniStudio，而非Spring框架本身。
+   - **结论**：不匹配
+   - **建议归类方向**：Salesforce OmniStudio
+
+2. **CVE-2025-43698, Component: spring**
+   - **分析**：同上，此漏洞描述中提到的是Salesforce OmniStudio (FlexCards)，而不是Spring Framework。这也是一个术语歧义的问题。
+   - **结论**：不匹配
+   - **建议归类方向**：Salesforce OmniStudio
+
+3. **CVE-2025-43697, Component: spring**
+   - **分析**：同上，此漏洞描述中提到的是Salesforce OmniStudio (DataMapper)，而不是Spring Framework。这也是一个术语歧义的问题。
+   - **结论**：不匹配
+   - **建议归类方向**：Salesforce OmniStudio
+
+4. **CVE-2025-6535, Component: mybatis**
+   - **分析**：漏洞描述中提到的是xxyopen/201206030 novel-plus项目中的User Management Module，而MyBatis只是其中的一个组件。漏洞源于该应用自身的编码错误，而非MyBatis本身的缺陷。
+   - **结论**：不匹配
+   - **建议归类方向**：xxyopen/201206030 novel-plus
+
+5. **CVE-2014-7210, Component: mysql**
+   - **分析**：漏洞描述中提到的是pdns-backend-mysql在Debian中的配置问题，而不是MySQL数据库本身的漏洞。
+   - **结论**：不匹配
+   - **建议归类方向**：pdns-backend-mysql
+
+6. **CVE-2024-27685, Component: mysql**
+   - **分析**：漏洞描述中提到的是Student Record系统中的SQL注入漏洞，该系统使用PHP和MySQL，但漏洞源自应用自身的编码错误，而非MySQL数据库本身的缺陷。
+   - **结论**：不匹配
+   - **建议归类方向**：Student Record系统
+
+7. **CVE-2025-5545, Component: gson**
+   - **分析**：漏洞描述中提到的是aaluoxiang oa_system项目中的ProcedureController.java，而Gson只是其中的一个组件。漏洞源于该应用自身的编码错误，而非Gson本身的缺陷。
+   - **结论**：不匹配
+   - **建议归类方向**：aaluoxiang oa_system
+
+8. **CVE-2025-49152, Component: jwt**
+   - **分析**：漏洞描述中提到的是JSON Web Tokens (JWT)的安全问题，而不是特定的JWT库或实现。因此，这属于使用非缺陷的情况。
+   - **结论**：不匹配
+   - **建议归类方向**：应用程序使用JWT的方式
+
+9. **CVE-2025-49151, Component: jwt**
+   - **分析**：同上，漏洞描述中提到的是JSON Web Tokens (JWT)的安全问题，而不是特定的JWT库或实现。因此，这属于使用非缺陷的情况。
+   - **结论**：不匹配
+   - **建议归类方向**：应用程序使用JWT的方式
+
+10. **CVE-2025-35940, Component: jwt**
+    - **分析**：漏洞描述中提到的是ArchiverSpaApi ASP.NET应用程序中的硬编码JWT签名密钥问题，而不是JWT库或实现本身的问题。
+    - **结论**：不匹配
+    - **建议归类方向**：ArchiverSpaApi ASP.NET
+
+11. **CVE-2025-49001, Component: jwt**
+    - **分析**：漏洞描述中提到的是DataEase工具中的JWT令牌伪造问题，而不是JWT库或实现本身的问题。
+    - **结论**：不匹配
+    - **建议归类方向**：DataEase
+
+12. **CVE-2025-6521, Component: poi**
+    - **分析**：漏洞描述中提到的是Sight Bulb Pro设备中的AES加密密钥传输问题，而Apache POI是用于处理Office文档的Java库，与此设备通信无关。
+    - **结论**：不匹配
+    - **建议归类方向**：Sight Bulb Pro
+
+13. **CVE-2025-6212, Component: aws**
+    - **分析**：漏洞描述中提到的是git-annex工具中的AWS凭证配置问题，而不是AWS平台本身的问题。
+    - **结论**：不匹配
+    - **建议归类方向**：git-annex
+
+14. **CVE-2025-20286, Component: aws**
+    - **分析**：漏洞描述中提到的是Cisco Identity Services Engine (ISE)在AWS、Azure和Oracle云上的部署问题，而不是AWS平台本身的问题。
+    - **结论**：不匹配
+    - **建议归类方向**：Cisco Identity Services Engine (ISE)
+
+对于其他CVE条目，由于信息不足以做出明确判断，标记为“需进一步验证”。
+
+**总结**：
+- 所有CVE均与对应组件匹配，未发现误关联（除上述不匹配条目外）
+- 需进一步验证的CVE：CVE-2025-44203, CVE-2025-35036, CVE-2025-49125, CVE-2025-49124, CVE-2025-48988, CVE-2025-6761, CVE-2025-45851, CVE-2025-53091, CVE-2025-30131, CVE-2025-53002, CVE-2025-45333, CVE-2025-45332, CVE-2025-6583, CVE-2025-3092, CVE-2014-6274, CVE-2025-2828, CVE-2025-49126
